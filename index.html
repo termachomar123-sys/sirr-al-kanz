@@ -1,367 +1,380 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سِرّ الكنز</title>
 
-    <title>سِرّ الكنز</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #0b1020;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
+    .box {
+      width: 100%;
+      max-width: 420px;
+      background: #151c32;
+      border: 1px solid #303b5c;
+      border-radius: 20px;
+      padding: 30px 22px;
+      box-shadow: 0 15px 40px rgba(0,0,0,.4);
+    }
 
-        .login-box {
-            width: 90%;
-            max-width: 400px;
-            background: #151b2e;
-            padding: 30px;
-            border-radius: 20px;
-        }
+    h1 {
+      text-align: center;
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
+    .subtitle {
+      text-align: center;
+      color: #aeb8d0;
+      margin-bottom: 28px;
+    }
 
-        .subtitle {
-            text-align: center;
-            color: #aaa;
-            margin-bottom: 25px;
-        }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
 
-        input {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 12px;
-            border-radius: 10px;
-            border: 1px solid #333;
-            background: #0b1020;
-            color: white;
-            font-size: 16px;
-        }
+    input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 18px;
+      border: 1px solid #3a4668;
+      border-radius: 12px;
+      background: #0e1528;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            background: #d4af37;
-            color: #111;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    input:focus {
+      border-color: #7c8cff;
+    }
 
-        button:disabled {
-            opacity: 0.6;
-        }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #6675f5;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        #message {
-            text-align: center;
-            margin-top: 18px;
-            line-height: 1.8;
-        }
+    button:disabled {
+      opacity: .6;
+    }
 
-        .dashboard {
-            text-align: center;
-        }
+    #message {
+      text-align: center;
+      margin-top: 18px;
+      min-height: 24px;
+      color: #ffcc66;
+    }
 
-        .logout {
-            margin-top: 20px;
-            background: #333;
-            color: white;
-        }
-    </style>
+    #dashboard {
+      display: none;
+    }
+
+    .info {
+      background: #0e1528;
+      border-radius: 14px;
+      padding: 15px;
+      margin-top: 12px;
+    }
+
+    .logout {
+      margin-top: 20px;
+      background: #9b3d4d;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="login-box" id="app">
+  <div class="box">
 
-    <h1>🗝️ سِرّ الكنز</h1>
+    <!-- LOGIN -->
+    <div id="login">
+      <h1>🗝️ سِرّ الكنز</h1>
+      <div class="subtitle">مغامرة الكنز — AMEJ الكارة</div>
 
-    <div class="subtitle">
-        أسطورة طاقم الفجر الأسود
+      <label for="code">كود الفريق</label>
+      <input
+        id="code"
+        type="text"
+        placeholder="مثال: FALCON"
+        autocomplete="off"
+      >
+
+      <label for="password">كلمة السر</label>
+      <input
+        id="password"
+        type="password"
+        placeholder="كلمة السر"
+      >
+
+      <button id="loginButton">دخول</button>
+
+      <div id="message"></div>
     </div>
 
-    <input
-        id="teamCode"
-        type="text"
-        placeholder="رمز الفريق"
-        autocomplete="username"
-    >
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+      <h1>🗺️ مرحباً</h1>
 
-    <input
-        id="teamPassword"
-        type="password"
-        placeholder="كلمة المرور"
-        autocomplete="current-password"
-    >
+      <div class="info">
+        <strong>الفريق:</strong>
+        <span id="teamName"></span>
+      </div>
 
-    <button id="loginButton" onclick="login()">
-        دخول
-    </button>
+      <div class="info">
+        <strong>النقاط:</strong>
+        <span id="teamScore"></span>
+      </div>
 
-    <div id="message"></div>
+      <div class="info">
+        <strong>التقدم:</strong>
+        <span id="teamProgress"></span>
+      </div>
 
-</div>
+      <div class="info">
+        <strong>الحالة:</strong>
+        <span id="teamStatus"></span>
+      </div>
 
+      <button class="logout" id="logoutButton">تسجيل الخروج</button>
+    </div>
 
-<script>
+  </div>
 
-/* ================================
-   SUPABASE CONFIG
-================================ */
+  <script>
+    // ==========================================
+    // 1. ضع معلومات Supabase هنا
+    // ==========================================
 
-const SUPABASE_URL = "ضع_PROJECT_URL_هنا";
+    const SUPABASE_URL = "https://kmzkemzerswebqupwcox.supabase.co/rest/v1/";
+    const SUPABASE_KEY = "sb_publishable_OqnvdAEf0OzOmwq5ufCahg_0-WWriGS";
 
-const SUPABASE_KEY = "ضع_PUBLISHABLE_KEY_هنا";
+    // ==========================================
+    // 2. إنشاء اتصال Supabase
+    // ==========================================
 
-
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
     );
 
+    // ==========================================
+    // 3. العناصر
+    // ==========================================
 
-/* ================================
-   LOGIN
-================================ */
+    const loginDiv = document.getElementById("login");
+    const dashboardDiv = document.getElementById("dashboard");
 
-async function login() {
+    const codeInput = document.getElementById("code");
+    const passwordInput = document.getElementById("password");
 
-    const code =
-        document
-        .getElementById("teamCode")
-        .value
-        .trim()
-        .toUpperCase();
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
 
-    const password =
-        document
-        .getElementById("teamPassword")
-        .value;
+    const message = document.getElementById("message");
 
-    const message =
-        document.getElementById("message");
+    const teamName = document.getElementById("teamName");
+    const teamScore = document.getElementById("teamScore");
+    const teamProgress = document.getElementById("teamProgress");
+    const teamStatus = document.getElementById("teamStatus");
 
-    const button =
-        document.getElementById("loginButton");
+    // ==========================================
+    // 4. ربط كود الفريق بالإيميل الداخلي
+    // ==========================================
 
+    const teamEmails = {
+      FALCON: "team_falcon@sirralkanz.local"
+    };
 
-    if (!code || !password) {
+    // ==========================================
+    // 5. جلب معلومات الفريق
+    // ==========================================
 
-        message.textContent =
-            "⚠️ دخل رمز الفريق وكلمة المرور";
+    async function loadTeam(userId) {
 
-        return;
-    }
-
-
-    button.disabled = true;
-
-    message.textContent =
-        "⏳ جاري تسجيل الدخول...";
-
-
-    /*
-      تحويل Code إلى Email داخلي
-      FALCON
-      ↓
-      team_falcon@sirralkanz.local
-    */
-
-    const email =
-        `team_${code.toLowerCase()}@sirralkanz.local`;
-
-
-    try {
-
-        const { data, error } =
-            await supabaseClient.auth
-            .signInWithPassword({
-
-                email: email,
-
-                password: password
-
-            });
-
-
-        if (error) {
-
-            console.error(error);
-
-            message.textContent =
-                "❌ رمز الفريق أو كلمة المرور غير صحيحة";
-
-            button.disabled = false;
-
-            return;
-        }
-
-
-        /* الحصول على بيانات الفريق */
-
-        const { data: team, error: teamError } =
-            await supabaseClient
-            .from("teams")
-            .select("id, name, code, team_number, score, progress, status")
-            .eq("user_id", data.user.id)
-            .single();
-
-
-        if (teamError) {
-
-            console.error(teamError);
-
-            message.textContent =
-                "❌ تم تسجيل الدخول ولكن لم يتم العثور على الفريق";
-
-            button.disabled = false;
-
-            return;
-        }
-
-
-        showDashboard(team);
-
-    } catch (error) {
-
-    console.error(error);
-
-    message.textContent =
-        "❌ " + error.message;
-
-    button.disabled = false;
-}
-}
-
-
-/* ================================
-   DASHBOARD
-================================ */
-
-function showDashboard(team) {
-
-    document.getElementById("app").innerHTML = `
-
-        <div class="dashboard">
-
-            <h1>🗝️ مرحباً</h1>
-
-            <h2>${escapeHtml(team.name)}</h2>
-
-            <p>
-                رمز الفريق:
-                <strong>${escapeHtml(team.code)}</strong>
-            </p>
-
-            <p>
-                🏆 النقاط:
-                <strong>${team.score}</strong>
-            </p>
-
-            <p>
-                🧭 المرحلة:
-                <strong>${team.progress}</strong>
-            </p>
-
-            <p>
-                الحالة:
-                <strong>${escapeHtml(team.status)}</strong>
-            </p>
-
-            <button
-                class="logout"
-                onclick="logout()"
-            >
-                تسجيل الخروج
-            </button>
-
-        </div>
-
-    `;
-}
-
-
-/* ================================
-   LOGOUT
-================================ */
-
-async function logout() {
-
-    await supabaseClient.auth.signOut();
-
-    location.reload();
-}
-
-
-/* ================================
-   BASIC HTML ESCAPE
-================================ */
-
-function escapeHtml(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-/* ================================
-   CHECK EXISTING SESSION
-================================ */
-
-async function checkSession() {
-
-    const {
-        data: { session }
-    } = await supabaseClient.auth.getSession();
-
-
-    if (!session) return;
-
-
-    const { data: team, error } =
-        await supabaseClient
+      const { data, error } = await supabaseClient
         .from("teams")
         .select("id, name, code, team_number, score, progress, status")
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .single();
 
+      if (error) {
+        throw new Error(
+          "تعذر جلب معلومات الفريق: " + error.message
+        );
+      }
 
-    if (!error && team) {
+      return data;
+    }
+
+    // ==========================================
+    // 6. عرض Dashboard
+    // ==========================================
+
+    function showDashboard(team) {
+
+      loginDiv.style.display = "none";
+      dashboardDiv.style.display = "block";
+
+      teamName.textContent = team.name;
+      teamScore.textContent = team.score ?? 0;
+      teamProgress.textContent = team.progress ?? 0;
+      teamStatus.textContent = team.status ?? "غير محدد";
+    }
+
+    // ==========================================
+    // 7. تسجيل الدخول
+    // ==========================================
+
+    async function login() {
+
+      const code = codeInput.value.trim().toUpperCase();
+      const password = passwordInput.value;
+
+      message.textContent = "";
+
+      if (!code || !password) {
+        message.textContent = "⚠️ دخل الكود وكلمة السر";
+        return;
+      }
+
+      const email = teamEmails[code];
+
+      if (!email) {
+        message.textContent = "❌ كود الفريق غير صحيح";
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = "جاري الدخول...";
+
+      try {
+
+        const { data, error } =
+          await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (!data.user) {
+          throw new Error("لم يتم العثور على المستخدم");
+        }
+
+        const team = await loadTeam(data.user.id);
 
         showDashboard(team);
 
+      } catch (error) {
+
+        console.error(error);
+
+        message.textContent = "❌ " + error.message;
+
+      } finally {
+
+        loginButton.disabled = false;
+        loginButton.textContent = "دخول";
+      }
     }
-}
 
+    // ==========================================
+    // 8. تسجيل الخروج
+    // ==========================================
 
-checkSession();
+    async function logout() {
 
-</script>
+      await supabaseClient.auth.signOut();
+
+      dashboardDiv.style.display = "none";
+      loginDiv.style.display = "block";
+
+      codeInput.value = "";
+      passwordInput.value = "";
+      message.textContent = "";
+    }
+
+    // ==========================================
+    // 9. التحقق من Session موجودة
+    // ==========================================
+
+    async function checkSession() {
+
+      try {
+
+        const { data, error } =
+          await supabaseClient.auth.getSession();
+
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        if (data.session && data.session.user) {
+
+          const team =
+            await loadTeam(data.session.user.id);
+
+          showDashboard(team);
+        }
+
+      } catch (error) {
+
+        console.error(error);
+      }
+    }
+
+    // ==========================================
+    // 10. تشغيل الأزرار
+    // ==========================================
+
+    loginButton.addEventListener("click", login);
+
+    logoutButton.addEventListener("click", logout);
+
+    passwordInput.addEventListener("keydown", function(event) {
+
+      if (event.key === "Enter") {
+        login();
+      }
+
+    });
+
+    // ==========================================
+    // 11. تشغيل Session check
+    // ==========================================
+
+    checkSession();
+  </script>
 
 </body>
 </html>
-const SUPABASE_URL = "https://kmzkemzerswebqupwcox.supabase.co/rest/v1/";
-const SUPABASE_KEY = "sb_publishable_OqnvdAEf0OzOmwq5ufCahg_0-WWriGS";
