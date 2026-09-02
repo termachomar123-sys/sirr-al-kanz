@@ -243,13 +243,13 @@ async function login() {
 
     } catch (error) {
 
-        console.error(error);
+    console.error(error);
 
-        message.textContent =
-            "❌ وقع خطأ غير متوقع";
+    message.textContent =
+        "❌ " + error.message;
 
-        button.disabled = false;
-    }
+    button.disabled = false;
+}
 }
 
 
