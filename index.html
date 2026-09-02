@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>سِرّ الكنز</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0b1020;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .login-box {
+            width: 90%;
+            max-width: 400px;
+            background: #151b2e;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: #0b1020;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #d4af37;
+            color: #111;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 18px;
+            line-height: 1.8;
+        }
+
+        .dashboard {
+            text-align: center;
+        }
+
+        .logout {
+            margin-top: 20px;
+            background: #333;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-box" id="app">
+
+    <h1>🗝️ سِرّ الكنز</h1>
+
+    <div class="subtitle">
+        أسطورة طاقم الفجر الأسود
+    </div>
+
+    <input
+        id="teamCode"
+        type="text"
+        placeholder="رمز الفريق"
+        autocomplete="username"
+    >
+
+    <input
+        id="teamPassword"
+        type="password"
+        placeholder="كلمة المرور"
+        autocomplete="current-password"
+    >
+
+    <button id="loginButton" onclick="login()">
+        دخول
+    </button>
+
+    <div id="message"></div>
+
+</div>
+
+
+<script>
+
+/* ================================
+   SUPABASE CONFIG
+================================ */
+
+const SUPABASE_URL = "ضع_PROJECT_URL_هنا";
+
+const SUPABASE_KEY = "ضع_PUBLISHABLE_KEY_هنا";
+
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+/* ================================
+   LOGIN
+================================ */
+
+async function login() {
+
+    const code =
+        document
+        .getElementById("teamCode")
+        .value
+        .trim()
+        .toUpperCase();
+
+    const password =
+        document
+        .getElementById("teamPassword")
+        .value;
+
+    const message =
+        document.getElementById("message");
+
+    const button =
+        document.getElementById("loginButton");
+
+
+    if (!code || !password) {
+
+        message.textContent =
+            "⚠️ دخل رمز الفريق وكلمة المرور";
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    message.textContent =
+        "⏳ جاري تسجيل الدخول...";
+
+
+    /*
+      تحويل Code إلى Email داخلي
+      FALCON
+      ↓
+      team_falcon@sirralkanz.local
+    */
+
+    const email =
+        `team_${code.toLowerCase()}@sirralkanz.local`;
+
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.auth
+            .signInWithPassword({
+
+                email: email,
+
+                password: password
+
+            });
+
+
+        if (error) {
+
+            console.error(error);
+
+            message.textContent =
+                "❌ رمز الفريق أو كلمة المرور غير صحيحة";
+
+            button.disabled = false;
+
+            return;
+        }
+
+
+        /* الحصول على بيانات الفريق */
+
+        const { data: team, error: teamError } =
+            await supabaseClient
+            .from("teams")
+            .select("id, name, code, team_number, score, progress, status")
+            .eq("user_id", data.user.id)
+            .single();
+
+
+        if (teamError) {
+
+            console.error(teamError);
+
+            message.textContent =
+                "❌ تم تسجيل الدخول ولكن لم يتم العثور على الفريق";
+
+            button.disabled = false;
+
+            return;
+        }
+
+
+        showDashboard(team);
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "❌ وقع خطأ غير متوقع";
+
+        button.disabled = false;
+    }
+}
+
+
+/* ================================
+   DASHBOARD
+================================ */
+
+function showDashboard(team) {
+
+    document.getElementById("app").innerHTML = `
+
+        <div class="dashboard">
+
+            <h1>🗝️ مرحباً</h1>
+
+            <h2>${escapeHtml(team.name)}</h2>
+
+            <p>
+                رمز الفريق:
+                <strong>${escapeHtml(team.code)}</strong>
+            </p>
+
+            <p>
+                🏆 النقاط:
+                <strong>${team.score}</strong>
+            </p>
+
+            <p>
+                🧭 المرحلة:
+                <strong>${team.progress}</strong>
+            </p>
+
+            <p>
+                الحالة:
+                <strong>${escapeHtml(team.status)}</strong>
+            </p>
+
+            <button
+                class="logout"
+                onclick="logout()"
+            >
+                تسجيل الخروج
+            </button>
+
+        </div>
+
+    `;
+}
+
+
+/* ================================
+   LOGOUT
+================================ */
+
+async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    location.reload();
+}
+
+
+/* ================================
+   BASIC HTML ESCAPE
+================================ */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+/* ================================
+   CHECK EXISTING SESSION
+================================ */
+
+async function checkSession() {
+
+    const {
+        data: { session }
+    } = await supabaseClient.auth.getSession();
+
+
+    if (!session) return;
+
+
+    const { data: team, error } =
+        await supabaseClient
+        .from("teams")
+        .select("id, name, code, team_number, score, progress, status")
+        .eq("user_id", session.user.id)
+        .single();
+
+
+    if (!error && team) {
+
+        showDashboard(team);
+
+    }
+}
+
+
+checkSession();
+
+</script>
+
+</body>
+</html>
+const SUPABASE_URL = "https://kmzkemzerswebqupwcox.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_OqnvdAEf0OzOmwq5ufCahg_0-WWriGS";
